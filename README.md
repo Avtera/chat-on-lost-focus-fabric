@@ -1,3 +1,5 @@
+**Updated to 26.2**
+
 Simple Minecraft mod that allows you to open chat when the Minecraft window is not focused.  
 Please report any kind of bugs or suggestions on the ["Issues"](https://github.com/atikiNBTW/chat-on-lost-focus-fabric/issues) page on my Github!
 
