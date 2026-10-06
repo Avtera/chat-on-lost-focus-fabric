@@ -21,35 +21,46 @@ public class ChatOnLostFocus implements ClientModInitializer {
 
     private boolean wasFocused = true;
 
+    /**
+     * 26.2 uses KEYSYM; 26.3 (SDL) renamed it to KEYBOARD.
+     */
+    private static InputConstants.Type keyboardType() {
+        try {
+            return InputConstants.Type.valueOf("KEYBOARD"); // 26.3+
+        } catch (IllegalArgumentException e) {
+            return InputConstants.Type.valueOf("KEYSYM"); // 26.2
+        }
+    }
+
     @Override
     public void onInitializeClient() {
         ConfigScreen.init();
+        InputConstants.Type keyType = keyboardType();
+
         KeyMapping toggleBind = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "keybind.chatonlostfocus.onOffBind",
-                InputConstants.Type.KEYSYM,
+                keyType,
                 InputConstants.KEY_G,
                 CATEGORY
         ));
         KeyMapping openConfigScreenBind = KeyMappingHelper.registerKeyMapping(new KeyMapping(
                 "keybind.chatonlostfocus.openConfigScreenBind",
-                InputConstants.Type.KEYSYM,
+                keyType,
                 InputConstants.KEY_H,
                 CATEGORY
         ));
 
         ClientTickEvents.END_CLIENT_TICK.register(client -> {
-            // Open chat when the window loses focus (onWindowFocusChanged is deprecated)
             boolean focused = client.isWindowActive();
             if (wasFocused && !focused && ConfigScreen.config.enabled && client.gui.screen() == null) {
                 client.gui.setScreen(new ChatScreen(ConfigScreen.config.textInChat, false));
-                // Prevent vanilla pause-on-lost-focus from opening the pause menu
                 client.options.pauseOnLostFocus = false;
             }
             wasFocused = focused;
 
             if (toggleBind.consumeClick()) {
                 ConfigScreen.config.enabled = !ConfigScreen.config.enabled;
-                this.sendActionBarMessage();
+                sendActionBarMessage();
             }
 
             if (openConfigScreenBind.consumeClick()) {
@@ -62,7 +73,9 @@ public class ChatOnLostFocus implements ClientModInitializer {
     }
 
     private void sendActionBarMessage() {
-        Component message = Component.translatable(ConfigScreen.config.enabled ? "overlay.chatonlostfocus.on" : "overlay.chatonlostfocus.off");
+        Component message = Component.translatable(
+                ConfigScreen.config.enabled ? "overlay.chatonlostfocus.on" : "overlay.chatonlostfocus.off"
+        );
         Minecraft.getInstance().gui.hud.setOverlayMessage(message, true);
     }
 }
